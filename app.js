@@ -6,48 +6,8 @@
 // ==============================================================================
 // 1. DATA DEFAULT RESMI (FALLBACK / INITIAL REPOSITORY)
 // ==============================================================================
-const INITIAL_UNITS = [
-    {
-        id: "b2a95574-8b01-4be3-b9dc-c3c2b0373801",
-        code: "SEKR",
-        name: "Sekretariat",
-        sub_name: "Subbag Kepegawaian & Tata Usaha",
-        description: "Pelayanan administrasi persuratan, kepegawaian, tata laksana, dan perencanaan program dinas.",
-        quota: 10,
-        filled: 7,
-        status: "Menerima"
-    },
-    {
-        id: "b2a95574-8b01-4be3-b9dc-c3c2b0373802",
-        code: "LATTAS",
-        name: "Bidang Pelatihan & Produktivitas",
-        sub_name: "BLK & Pengembangan Keahlian Kerja",
-        description: "Standardisasi kompetensi kejuruan, kelembagaan pelatihan vokasi, dan peningkatan produktivitas tenaga kerja.",
-        quota: 8,
-        filled: 8,
-        status: "Penuh"
-    },
-    {
-        id: "b2a95574-8b01-4be3-b9dc-c3c2b0373803",
-        code: "PENTA",
-        name: "Bidang Penempatan Tenaga Kerja",
-        sub_name: "Bursa Kerja & Analis Pasar Kerja",
-        description: "Pelayanan bursa kerja online/offline (AK-1), penempatan tenaga kerja dalam dan luar negeri, serta penyuluhan jabatan.",
-        quota: 10,
-        filled: 6,
-        status: "Kuota Terbatas"
-    },
-    {
-        id: "b2a95574-8b01-4be3-b9dc-c3c2b0373804",
-        code: "TRANS",
-        name: "Bidang Transmigrasi",
-        sub_name: "Pengembangan Wilayah & Kawasan",
-        description: "Penataan persebaran penduduk, pengembangan kawasan transmigrasi mandiri, dan kemitraan ekonomi warga kawasan.",
-        quota: 5,
-        filled: 2,
-        status: "Menerima"
-    }
-];
+// Daftar unit dikosongkan secara default; Admin mengisi/mengelola melalui Panel Admin atau Supabase
+const INITIAL_UNITS = [];
 
 const INITIAL_APPLICATIONS = [
     {
@@ -164,9 +124,10 @@ class AppState {
     constructor() {
         this.supabase = null;
         this.isSupabaseConnected = false;
-        this.units = this.load('disnakertrans_units', INITIAL_UNITS);
+        this.units = this.load('disnakertrans_units_v2', INITIAL_UNITS);
         this.applications = this.load('disnakertrans_apps', INITIAL_APPLICATIONS);
         this.logbooks = this.load('disnakertrans_logs', INITIAL_LOGBOOKS);
+        this.currentUser = this.load('disnakertrans_auth_user', null);
         this.currentCert = null;
         this.currentLetter = null;
         this.initSupabase();
@@ -183,9 +144,14 @@ class AppState {
 
     save() {
         try {
-            localStorage.setItem('disnakertrans_units', JSON.stringify(this.units));
+            localStorage.setItem('disnakertrans_units_v2', JSON.stringify(this.units));
             localStorage.setItem('disnakertrans_apps', JSON.stringify(this.applications));
             localStorage.setItem('disnakertrans_logs', JSON.stringify(this.logbooks));
+            if (this.currentUser) {
+                localStorage.setItem('disnakertrans_auth_user', JSON.stringify(this.currentUser));
+            } else {
+                localStorage.removeItem('disnakertrans_auth_user');
+            }
         } catch (e) {
             console.warn("Gagal menyimpan ke localStorage:", e);
         }
@@ -288,6 +254,16 @@ const state = new AppState();
 // 3. NAVIGASI TAB & TAMPILAN
 // ==============================================================================
 function switchTab(tabId) {
+    // Proteksi Login untuk Dashboard Peserta & Panel Admin
+    if (tabId === 'dashboard-admin' && (!state.currentUser || state.currentUser.role !== 'admin')) {
+        openLoginModal('admin');
+        return;
+    }
+    if (tabId === 'dashboard-peserta' && (!state.currentUser || state.currentUser.role !== 'peserta')) {
+        openLoginModal('peserta');
+        return;
+    }
+
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-link').forEach(btn => {
         btn.classList.remove('text-blue-900', 'font-bold', 'border-b-2', 'border-blue-900', 'bg-slate-100');
@@ -305,7 +281,11 @@ function switchTab(tabId) {
     }
 
     if (tabId === 'unit-kuota') renderUnitsTable();
-    if (tabId === 'dashboard-admin') renderAdminTable();
+    if (tabId === 'dashboard-admin') {
+        renderAdminUnitsTable();
+        renderAdminTable();
+    }
+    if (tabId === 'dashboard-peserta') renderPesertaDashboardHeader();
     if (tabId === 'sertifikat') renderCertificatesList();
 }
 
@@ -332,7 +312,23 @@ function renderUnitsTable() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-500 text-sm">Tidak ada unit kerja yang sesuai filter.</td></tr>`;
+        if (state.units.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-12 px-4">
+                        <div class="max-w-md mx-auto">
+                            <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </div>
+                            <p class="font-bold text-slate-800 text-sm">Belum Ada Unit / Bidang Terdaftar</p>
+                            <p class="text-xs text-slate-500 mt-1">Daftar unit penempatan dan kuota belum ditambahkan oleh Admin Disnakertrans.</p>
+                        </div>
+                    </td>
+                </tr>`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-500 text-sm">Tidak ada unit kerja yang sesuai filter.</td></tr>`;
+        }
+        populateUnitDropdowns();
         return;
     }
 
@@ -390,6 +386,15 @@ function populateUnitDropdowns() {
     if (!sel) return;
     const currentVal = sel.value;
     sel.innerHTML = '';
+    if (state.units.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = "";
+        opt.textContent = "Belum ada unit tersedia (Menunggu Admin)";
+        opt.disabled = true;
+        opt.selected = true;
+        sel.appendChild(opt);
+        return;
+    }
     state.units.forEach(u => {
         const opt = document.createElement('option');
         opt.value = u.name;
@@ -1179,10 +1184,272 @@ function generateQrCode(elementId, text) {
 }
 
 // ==============================================================================
-// 14. INISIALISASI SAAT DOM READY
+// 14. SISTEM LOGIN (PESERTA & ADMIN) + MANAJEMEN UNIT ADMIN
+// ==============================================================================
+function openLoginModal(defaultRole = 'peserta') {
+    switchLoginRole(defaultRole);
+    document.getElementById('modal-login').classList.remove('hidden');
+}
+
+function closeLoginModal() {
+    document.getElementById('modal-login').classList.add('hidden');
+}
+
+function switchLoginRole(role) {
+    const tabPeserta = document.getElementById('login-tab-peserta');
+    const tabAdmin = document.getElementById('login-tab-admin');
+    const formPeserta = document.getElementById('form-login-peserta');
+    const formAdmin = document.getElementById('form-login-admin');
+
+    if (role === 'admin') {
+        tabAdmin.className = "py-2 rounded-lg bg-white text-slate-900 shadow-sm transition";
+        tabPeserta.className = "py-2 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formAdmin.classList.remove('hidden');
+        formPeserta.classList.add('hidden');
+    } else {
+        tabPeserta.className = "py-2 rounded-lg bg-white text-blue-700 shadow-sm transition";
+        tabAdmin.className = "py-2 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formPeserta.classList.remove('hidden');
+        formAdmin.classList.add('hidden');
+    }
+}
+
+function handlePesertaLogin(e) {
+    e.preventDefault();
+    const idVal = document.getElementById('login-peserta-id').value.trim();
+    const passVal = document.getElementById('login-peserta-pass').value.trim();
+
+    const matchedApp = state.applications.find(a =>
+        (a.registration_number.toLowerCase() === idVal.toLowerCase() || a.applicant_id_number === idVal) &&
+        a.applicant_id_number === passVal
+    );
+
+    if (!matchedApp) {
+        showAlert("Nomor Registrasi / NIM atau Kata Sandi tidak cocok. Pastikan Anda memasukkan NIM dengan benar.", "Login Gagal");
+        return;
+    }
+
+    state.currentUser = {
+        role: 'peserta',
+        name: matchedApp.applicant_name,
+        identifier: matchedApp.applicant_id_number,
+        regNo: matchedApp.registration_number,
+        institution: matchedApp.institution,
+        major: matchedApp.major,
+        status: matchedApp.status
+    };
+    state.save();
+    updateAuthNavbarUI();
+    closeLoginModal();
+    e.target.reset();
+    switchTab('dashboard-peserta');
+}
+
+async function handleAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-admin-email').value.trim();
+    const password = document.getElementById('login-admin-pass').value.trim();
+
+    let authenticated = false;
+
+    // 1. Cek via Supabase Auth jika user terdaftar di Supabase
+    if (state.supabase && email.includes('@')) {
+        try {
+            const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
+            if (!error && data?.user) {
+                authenticated = true;
+            }
+        } catch (err) {
+            console.warn("Supabase auth fallback ke kredensial lokal:", err);
+        }
+    }
+
+    // 2. Fallback kredensial Admin Instansi standar
+    if (!authenticated && (email === 'admin@disnaker.sulsel.go.id' || email === 'admin') && password === 'admin123') {
+        authenticated = true;
+    }
+
+    if (!authenticated) {
+        showAlert("Email / Username atau Kata Sandi Admin salah.", "Akses Ditolak");
+        return;
+    }
+
+    state.currentUser = {
+        role: 'admin',
+        name: 'Operator Admin Disnaker',
+        email: email
+    };
+    state.save();
+    updateAuthNavbarUI();
+    closeLoginModal();
+    e.target.reset();
+    switchTab('dashboard-admin');
+}
+
+async function logoutUser() {
+    if (state.supabase) {
+        try { await state.supabase.auth.signOut(); } catch (e) {}
+    }
+    state.currentUser = null;
+    state.save();
+    updateAuthNavbarUI();
+    switchTab('beranda');
+    showAlert("Anda telah keluar dari sistem.", "Logout Berhasil");
+}
+
+function updateAuthNavbarUI() {
+    const pesertaLabel = document.getElementById('nav-label-peserta');
+    const adminLabel = document.getElementById('nav-label-admin');
+    if (pesertaLabel) {
+        pesertaLabel.innerText = (state.currentUser && state.currentUser.role === 'peserta')
+            ? state.currentUser.name.split(' ')[0]
+            : 'Peserta';
+    }
+    if (adminLabel) {
+        adminLabel.innerText = (state.currentUser && state.currentUser.role === 'admin')
+            ? 'Panel Admin'
+            : 'Admin';
+    }
+}
+
+function renderPesertaDashboardHeader() {
+    if (!state.currentUser || state.currentUser.role !== 'peserta') return;
+    const nameEl = document.getElementById('peserta-dash-name');
+    const metaEl = document.getElementById('peserta-dash-meta');
+    if (nameEl) nameEl.innerText = state.currentUser.name;
+    if (metaEl) metaEl.innerText = `NIM: ${state.currentUser.identifier} • ${state.currentUser.institution} • ${state.currentUser.major}`;
+}
+
+// --- CRUD Unit / Bidang oleh Admin ---
+function renderAdminUnitsTable() {
+    const tbody = document.getElementById('admin-units-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (state.units.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
+                    Belum ada unit/bidang yang ditambahkan. Klik <strong>"+ Tambah Unit / Bidang"</strong> di atas untuk mengisi data.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    state.units.forEach(u => {
+        const badgeClass = u.status === 'Menerima'
+            ? 'bg-emerald-100 text-emerald-800'
+            : u.status === 'Kuota Terbatas'
+                ? 'bg-amber-100 text-amber-800'
+                : 'bg-rose-100 text-rose-800';
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-200 hover:bg-slate-50 transition text-xs";
+        tr.innerHTML = `
+            <td class="p-4">
+                <span class="font-mono text-[11px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">${u.code}</span>
+                <strong class="block text-slate-900 text-sm mt-1">${u.name}</strong>
+                <span class="text-slate-500">${u.sub_name}</span>
+            </td>
+            <td class="p-4 text-center font-bold">${u.quota} Orang</td>
+            <td class="p-4 text-center font-bold">${u.filled} Terisi</td>
+            <td class="p-4 text-center"><span class="px-2.5 py-1 rounded-full font-bold ${badgeClass}">${u.status}</span></td>
+            <td class="p-4 text-right space-x-1">
+                <button onclick="openUnitModal('${u.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-lg transition">Edit</button>
+                <button onclick="deleteUnit('${u.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-lg transition">Hapus</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openUnitModal(unitId = null) {
+    const titleEl = document.getElementById('unit-modal-title');
+    if (unitId) {
+        const u = state.units.find(x => x.id === unitId);
+        if (!u) return;
+        titleEl.innerText = "Edit Unit / Bidang";
+        document.getElementById('unit-form-id').value = u.id;
+        document.getElementById('unit-form-code').value = u.code;
+        document.getElementById('unit-form-name').value = u.name;
+        document.getElementById('unit-form-subname').value = u.sub_name;
+        document.getElementById('unit-form-desc').value = u.description || '';
+        document.getElementById('unit-form-quota').value = u.quota;
+        document.getElementById('unit-form-filled').value = u.filled;
+        document.getElementById('unit-form-status').value = u.status;
+    } else {
+        titleEl.innerText = "Tambah Unit / Bidang Magang";
+        document.getElementById('unit-form-id').value = '';
+        document.getElementById('unit-form-code').value = '';
+        document.getElementById('unit-form-name').value = '';
+        document.getElementById('unit-form-subname').value = '';
+        document.getElementById('unit-form-desc').value = '';
+        document.getElementById('unit-form-quota').value = 10;
+        document.getElementById('unit-form-filled').value = 0;
+        document.getElementById('unit-form-status').value = 'Menerima';
+    }
+    document.getElementById('modal-unit-form').classList.remove('hidden');
+}
+
+function closeUnitModal() {
+    document.getElementById('modal-unit-form').classList.add('hidden');
+}
+
+async function saveUnitForm(e) {
+    e.preventDefault();
+    const id = document.getElementById('unit-form-id').value;
+    const payload = {
+        code: document.getElementById('unit-form-code').value.trim().toUpperCase(),
+        name: document.getElementById('unit-form-name').value.trim(),
+        sub_name: document.getElementById('unit-form-subname').value.trim(),
+        description: document.getElementById('unit-form-desc').value.trim(),
+        quota: parseInt(document.getElementById('unit-form-quota').value, 10) || 10,
+        filled: parseInt(document.getElementById('unit-form-filled').value, 10) || 0,
+        status: document.getElementById('unit-form-status').value
+    };
+
+    if (id) {
+        const idx = state.units.findIndex(u => u.id === id);
+        if (idx !== -1) state.units[idx] = { ...state.units[idx], ...payload };
+        if (state.supabase) {
+            await state.supabase.from('units').update(payload).eq('id', id);
+        }
+    } else {
+        const newUnit = {
+            id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'unit-' + Date.now(),
+            ...payload
+        };
+        state.units.push(newUnit);
+        if (state.supabase) {
+            await state.supabase.from('units').insert([newUnit]);
+        }
+    }
+
+    state.save();
+    renderAdminUnitsTable();
+    renderUnitsTable();
+    closeUnitModal();
+    showAlert(`Unit "${payload.name}" berhasil disimpan.`, "Unit Diperbarui");
+}
+
+async function deleteUnit(unitId) {
+    state.units = state.units.filter(u => u.id !== unitId);
+    state.save();
+    if (state.supabase) {
+        await state.supabase.from('units').delete().eq('id', unitId);
+    }
+    renderAdminUnitsTable();
+    renderUnitsTable();
+    showAlert("Unit telah dihapus dari daftar.", "Unit Dihapus");
+}
+
+// ==============================================================================
+// 15. INISIALISASI SAAT DOM READY
 // ==============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    updateAuthNavbarUI();
     renderUnitsTable();
+    renderAdminUnitsTable();
     renderLogbooks();
     renderAdminTable();
     renderCertificatesList();

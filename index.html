@@ -120,15 +120,14 @@
 
             <!-- Aksi Pengguna & Admin Sisi Kanan -->
             <div class="hidden sm:flex items-center space-x-2.5">
-                <button onclick="switchTab('dashboard-peserta')" class="inline-flex items-center space-x-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-100 transition">
+                <button onclick="switchTab('dashboard-peserta')" id="nav-btn-peserta" class="inline-flex items-center space-x-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-100 transition">
                     <i class="fa-solid fa-user-graduate"></i>
-                    <span>Peserta</span>
+                    <span id="nav-label-peserta">Peserta</span>
                 </button>
-                <button onclick="switchTab('dashboard-admin')" class="inline-flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-slate-800 shadow transition">
+                <button onclick="switchTab('dashboard-admin')" id="nav-btn-admin" class="inline-flex items-center space-x-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-slate-800 shadow transition">
                     <i class="fa-solid fa-shield-halved text-amber-400"></i>
-                    <span>Admin</span>
+                    <span id="nav-label-admin">Admin</span>
                 </button>
-                <button onclick="openSupabaseModal()" id="supabase-status-badge" class="transition"></button>
             </div>
 
             <!-- Mobile Hamburger Button (Persis Dokumen Acuan Mobile) -->
@@ -150,9 +149,8 @@
             <button onclick="switchTab('verifikasi'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 text-slate-800 font-bold">Cek Dokumen</button>
 
             <div class="pt-3 pb-1 border-t border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3">Area Pengguna & Operator</div>
-            <button onclick="switchTab('dashboard-peserta'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded-xl bg-blue-50 text-blue-700 font-bold">Dashboard Peserta Aktif</button>
+            <button onclick="switchTab('dashboard-peserta'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded-xl bg-blue-50 text-blue-700 font-bold">Dashboard Peserta</button>
             <button onclick="switchTab('dashboard-admin'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded-xl hover:bg-slate-100 text-slate-800 font-bold">Panel Admin Disnaker</button>
-            <button onclick="openSupabaseModal(); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded-xl hover:bg-emerald-50 text-emerald-800 font-bold">Koneksi Supabase</button>
         </div>
     </header>
 
@@ -637,14 +635,20 @@
             <div class="bg-sulsel-navy text-white rounded-3xl p-8 shadow-xl mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b-4 border-sulsel-gold">
                 <div>
                     <span class="bg-blue-800 text-blue-200 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Akun Peserta Magang</span>
-                    <h2 class="text-3xl font-black mt-2 font-heading">Nurhayani</h2>
-                    <p class="text-slate-300 text-xs sm:text-sm mt-0.5">NIM: 123456789 • Universitas Negeri Makassar • Teknik Informatika</p>
+                    <h2 id="peserta-dash-name" class="text-3xl font-black mt-2 font-heading">Nurhayani</h2>
+                    <p id="peserta-dash-meta" class="text-slate-300 text-xs sm:text-sm mt-0.5">NIM: 123456789 • Universitas Negeri Makassar • Teknik Informatika</p>
                 </div>
-                <div class="bg-white/10 p-4 rounded-2xl border border-white/20 text-left">
-                    <span class="text-xs text-blue-200 block">Status Kegiatan Saat Ini</span>
-                    <strong class="text-emerald-400 text-sm flex items-center mt-1">
-                        <i class="fa-solid fa-circle-check mr-1.5"></i> Magang Selesai & Sertifikat Terbit
-                    </strong>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div class="bg-white/10 p-4 rounded-2xl border border-white/20 text-left">
+                        <span class="text-xs text-blue-200 block">Status Kegiatan Saat Ini</span>
+                        <strong id="peserta-dash-status" class="text-emerald-400 text-sm flex items-center mt-1">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i> Magang Selesai &amp; Sertifikat Terbit
+                        </strong>
+                    </div>
+                    <button onclick="logoutUser()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Keluar</span>
+                    </button>
                 </div>
             </div>
 
@@ -743,10 +747,14 @@
                     <h2 class="text-3xl font-black mt-2 font-heading">Panel Pengelolaan Permohonan & Sertifikat</h2>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Dinas Tenaga Kerja dan Transmigrasi Provinsi Sulawesi Selatan</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <button onclick="openSupabaseModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-700 transition flex items-center space-x-2">
                         <i class="fa-solid fa-database text-blue-400"></i>
                         <span>Database Supabase</span>
+                    </button>
+                    <button onclick="logoutUser()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-2 shadow">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Keluar</span>
                     </button>
                 </div>
             </div>
@@ -772,6 +780,37 @@
                     <span class="text-xs font-bold text-slate-500 uppercase">Sertifikat Terbit</span>
                     <h3 id="stat-total-cert" class="text-2xl font-black text-emerald-700 mt-1">0</h3>
                     <span class="text-[11px] text-emerald-800 font-semibold">Tervalidasi QR Code</span>
+                </div>
+            </div>
+
+            <!-- Manajemen Unit / Bidang & Kuota Magang (Diisi oleh Admin) -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 font-heading">Kelola Unit / Bidang &amp; Kuota Magang</h3>
+                        <p class="text-xs text-slate-500">Tambahkan atau ubah unit penempatan yang akan tampil di halaman Magang.</p>
+                    </div>
+                    <button onclick="openUnitModal()" class="bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow transition flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Tambah Unit / Bidang</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider bg-slate-100 font-bold">
+                                <th class="p-4">Kode &amp; Nama Unit</th>
+                                <th class="p-4 text-center">Kuota</th>
+                                <th class="p-4 text-center">Terisi</th>
+                                <th class="p-4 text-center">Status</th>
+                                <th class="p-4 text-right">Aksi Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-units-table-body" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                            <!-- Populated via app.js -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -1172,6 +1211,126 @@
             <button id="sys-modal-btn" onclick="closeSystemAlert()" class="w-full bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold py-3 rounded-xl text-xs shadow transition">
                 Mengerti & Lanjutkan
             </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         MODAL 6: SISTEM LOGIN TERPADU (PESERTA & ADMIN)
+         =================================================================== -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-fade">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 mb-5">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-sulsel-navy text-lg"></i>
+                    <h3 class="font-bold text-slate-900 text-base font-heading">Masuk ke Portal Layanan</h3>
+                </div>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Role Switcher Tabs -->
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-5 text-xs font-bold">
+                <button id="login-tab-peserta" onclick="switchLoginRole('peserta')" class="py-2 rounded-lg bg-white text-blue-700 shadow-sm transition">
+                    <i class="fa-solid fa-user-graduate mr-1"></i> Peserta
+                </button>
+                <button id="login-tab-admin" onclick="switchLoginRole('admin')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Admin Disnaker
+                </button>
+            </div>
+
+            <!-- Form Login Peserta -->
+            <form id="form-login-peserta" onsubmit="handlePesertaLogin(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Nomor Registrasi / NIM</label>
+                    <input type="text" id="login-peserta-id" required placeholder="Contoh: MAG-2026-00125 atau 123456789" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">NIM / Kata Sandi</label>
+                    <input type="password" id="login-peserta-pass" required placeholder="Masukkan NIM Anda" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                </div>
+                <div class="p-3 bg-blue-50 rounded-xl border border-blue-200 text-blue-900 text-[11px] leading-relaxed">
+                    <strong>Contoh Akun Peserta:</strong> No. Reg <code>MAG-2026-00125</code> &bull; Sandi/NIM <code>123456789</code> (atau gunakan No. Reg &amp; NIM yang Anda daftarkan).
+                </div>
+                <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow transition">
+                    Masuk sebagai Peserta
+                </button>
+            </form>
+
+            <!-- Form Login Admin -->
+            <form id="form-login-admin" onsubmit="handleAdminLogin(event)" class="space-y-4 text-xs hidden">
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Email / Username Admin</label>
+                    <input type="text" id="login-admin-email" required placeholder="admin@disnaker.sulsel.go.id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Kata Sandi</label>
+                    <input type="password" id="login-admin-pass" required placeholder="Masukkan kata sandi admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                    <strong>Akun Default Admin:</strong> <code>admin@disnaker.sulsel.go.id</code> &bull; Sandi: <code>admin123</code> (Terintegrasi dengan Supabase Auth jika user terdaftar di Supabase).
+                </div>
+                <button type="submit" class="w-full bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold py-3 rounded-xl shadow transition">
+                    Masuk sebagai Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         MODAL 7: TAMBAH / EDIT UNIT & KUOTA (ADMIN ONLY)
+         =================================================================== -->
+    <div id="modal-unit-form" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-fade">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 mb-4">
+                <h3 id="unit-modal-title" class="font-bold text-slate-900 text-base font-heading">Tambah Unit / Bidang Magang</h3>
+                <button onclick="closeUnitModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveUnitForm(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="unit-form-id">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Kode Unit *</label>
+                        <input type="text" id="unit-form-code" required placeholder="SEKR" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 uppercase font-bold focus:outline-none focus:ring-2 focus:ring-blue-900">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Nama Unit / Bidang *</label>
+                        <input type="text" id="unit-form-name" required placeholder="Contoh: Sekretariat" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Sub-Bidang / Fokus Layanan *</label>
+                    <input type="text" id="unit-form-subname" required placeholder="Contoh: Subbag Kepegawaian &amp; Tata Usaha" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Deskripsi Tugas</label>
+                    <textarea id="unit-form-desc" rows="2" placeholder="Deskripsi singkat tugas dan kompetensi magang..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900"></textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Kuota Total *</label>
+                        <input type="number" id="unit-form-quota" value="10" min="1" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Terisi</label>
+                        <input type="number" id="unit-form-filled" value="0" min="0" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Status *</label>
+                        <select id="unit-form-status" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-bold">
+                            <option value="Menerima">Menerima</option>
+                            <option value="Kuota Terbatas">Kuota Terbatas</option>
+                            <option value="Penuh">Penuh</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-3 border-t border-slate-200">
+                    <button type="submit" class="flex-grow bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold py-2.5 rounded-xl shadow transition">
+                        Simpan Unit
+                    </button>
+                    <button type="button" onclick="closeUnitModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition">
+                        Batal
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
