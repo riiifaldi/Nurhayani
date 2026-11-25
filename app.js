@@ -1184,8 +1184,116 @@ function generateQrCode(elementId, text) {
 }
 
 // ==============================================================================
-// 14. SISTEM LOGIN (PESERTA & ADMIN) + MANAJEMEN UNIT ADMIN
+// 14. SISTEM LOGIN (LOADING SCREEN + AUTH GATE + MODAL) + MANAJEMEN UNIT ADMIN
 // ==============================================================================
+function initSplashAndAuthGate() {
+    const splash = document.getElementById('splash-loading-screen');
+    const authGate = document.getElementById('auth-gate-screen');
+
+    if (!state.currentUser && authGate) {
+        authGate.classList.remove('hidden');
+    }
+
+    if (splash) {
+        setTimeout(() => {
+            splash.classList.add('opacity-0');
+            setTimeout(() => {
+                splash.classList.add('hidden');
+            }, 450);
+        }, 1600);
+    }
+}
+
+function switchGateRole(role) {
+    const tabPeserta = document.getElementById('gate-tab-peserta');
+    const tabAdmin = document.getElementById('gate-tab-admin');
+    const formPeserta = document.getElementById('gate-form-peserta');
+    const formAdmin = document.getElementById('gate-form-admin');
+
+    if (role === 'admin') {
+        tabAdmin.className = "py-2.5 rounded-lg bg-white text-slate-900 shadow-sm transition";
+        tabPeserta.className = "py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formAdmin.classList.remove('hidden');
+        formPeserta.classList.add('hidden');
+    } else {
+        tabPeserta.className = "py-2.5 rounded-lg bg-white text-blue-700 shadow-sm transition";
+        tabAdmin.className = "py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formPeserta.classList.remove('hidden');
+        formAdmin.classList.add('hidden');
+    }
+}
+
+async function processPesertaAuth(nama, nim, email, password) {
+    if (!nama || !nim || !email || !password) {
+        showAlert("Harap lengkapi Nama, NIM, Email, dan Password.", "Data Belum Lengkap");
+        return false;
+    }
+
+    // Coba Supabase Auth jika terhubung (login atau daftar otomatis)
+    if (state.supabase && email.includes('@')) {
+        try {
+            const { error: signInErr } = await state.supabase.auth.signInWithPassword({ email, password });
+            if (signInErr) {
+                await state.supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: nama, nim: nim, role: 'peserta' } }
+                });
+            }
+        } catch (err) {
+            console.warn("Supabase auth peserta fallback ke sesi lokal:", err);
+        }
+    }
+
+    // Cocokkan dengan data pengajuan yang ada (jika tersedia)
+    const matchedApp = state.applications.find(a =>
+        a.applicant_id_number === nim ||
+        (a.email && a.email.toLowerCase() === email.toLowerCase())
+    );
+
+    state.currentUser = {
+        role: 'peserta',
+        name: nama,
+        identifier: nim,
+        email: email,
+        regNo: matchedApp ? matchedApp.registration_number : '-',
+        institution: matchedApp ? matchedApp.institution : 'Perguruan Tinggi Terdaftar',
+        major: matchedApp ? matchedApp.major : 'Peserta Magang / Riset',
+        status: matchedApp ? matchedApp.status : 'aktif'
+    };
+    state.save();
+    updateAuthNavbarUI();
+    return true;
+}
+
+async function handleGatePesertaLogin(e) {
+    e.preventDefault();
+    const nama = document.getElementById('gate-peserta-nama').value.trim();
+    const nim = document.getElementById('gate-peserta-nim').value.trim();
+    const email = document.getElementById('gate-peserta-email').value.trim();
+    const pass = document.getElementById('gate-peserta-pass').value.trim();
+
+    const ok = await processPesertaAuth(nama, nim, email, pass);
+    if (!ok) return;
+
+    document.getElementById('auth-gate-screen').classList.add('hidden');
+    e.target.reset();
+    switchTab('beranda');
+}
+
+async function handleGateAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('gate-admin-email').value.trim();
+    const password = document.getElementById('gate-admin-pass').value.trim();
+
+    const ok = await processAdminAuth(email, password);
+    if (!ok) return;
+
+    document.getElementById('auth-gate-screen').classList.add('hidden');
+    e.target.reset();
+    switchTab('dashboard-admin');
+}
+
 function openLoginModal(defaultRole = 'peserta') {
     switchLoginRole(defaultRole);
     document.getElementById('modal-login').classList.remove('hidden');
@@ -1214,45 +1322,26 @@ function switchLoginRole(role) {
     }
 }
 
-function handlePesertaLogin(e) {
+async function handlePesertaLogin(e) {
     e.preventDefault();
-    const idVal = document.getElementById('login-peserta-id').value.trim();
-    const passVal = document.getElementById('login-peserta-pass').value.trim();
+    const nama = document.getElementById('login-peserta-nama').value.trim();
+    const nim = document.getElementById('login-peserta-id').value.trim();
+    const email = document.getElementById('login-peserta-email').value.trim();
+    const pass = document.getElementById('login-peserta-pass').value.trim();
 
-    const matchedApp = state.applications.find(a =>
-        (a.registration_number.toLowerCase() === idVal.toLowerCase() || a.applicant_id_number === idVal) &&
-        a.applicant_id_number === passVal
-    );
+    const ok = await processPesertaAuth(nama, nim, email, pass);
+    if (!ok) return;
 
-    if (!matchedApp) {
-        showAlert("Nomor Registrasi / NIM atau Kata Sandi tidak cocok. Pastikan Anda memasukkan NIM dengan benar.", "Login Gagal");
-        return;
-    }
-
-    state.currentUser = {
-        role: 'peserta',
-        name: matchedApp.applicant_name,
-        identifier: matchedApp.applicant_id_number,
-        regNo: matchedApp.registration_number,
-        institution: matchedApp.institution,
-        major: matchedApp.major,
-        status: matchedApp.status
-    };
-    state.save();
-    updateAuthNavbarUI();
     closeLoginModal();
+    const authGate = document.getElementById('auth-gate-screen');
+    if (authGate) authGate.classList.add('hidden');
     e.target.reset();
     switchTab('dashboard-peserta');
 }
 
-async function handleAdminLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('login-admin-email').value.trim();
-    const password = document.getElementById('login-admin-pass').value.trim();
-
+async function processAdminAuth(email, password) {
     let authenticated = false;
 
-    // 1. Cek via Supabase Auth jika user terdaftar di Supabase
     if (state.supabase && email.includes('@')) {
         try {
             const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
@@ -1264,14 +1353,13 @@ async function handleAdminLogin(e) {
         }
     }
 
-    // 2. Fallback kredensial Admin Instansi standar
     if (!authenticated && (email === 'admin@disnaker.sulsel.go.id' || email === 'admin') && password === 'admin123') {
         authenticated = true;
     }
 
     if (!authenticated) {
-        showAlert("Email / Username atau Kata Sandi Admin salah.", "Akses Ditolak");
-        return;
+        showAlert("Email atau Password Admin salah.", "Akses Ditolak");
+        return false;
     }
 
     state.currentUser = {
@@ -1281,7 +1369,20 @@ async function handleAdminLogin(e) {
     };
     state.save();
     updateAuthNavbarUI();
+    return true;
+}
+
+async function handleAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-admin-email').value.trim();
+    const password = document.getElementById('login-admin-pass').value.trim();
+
+    const ok = await processAdminAuth(email, password);
+    if (!ok) return;
+
     closeLoginModal();
+    const authGate = document.getElementById('auth-gate-screen');
+    if (authGate) authGate.classList.add('hidden');
     e.target.reset();
     switchTab('dashboard-admin');
 }
@@ -1294,6 +1395,8 @@ async function logoutUser() {
     state.save();
     updateAuthNavbarUI();
     switchTab('beranda');
+    const authGate = document.getElementById('auth-gate-screen');
+    if (authGate) authGate.classList.remove('hidden');
     showAlert("Anda telah keluar dari sistem.", "Logout Berhasil");
 }
 
@@ -1447,6 +1550,7 @@ async function deleteUnit(unitId) {
 // 15. INISIALISASI SAAT DOM READY
 // ==============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    initSplashAndAuthGate();
     updateAuthNavbarUI();
     renderUnitsTable();
     renderAdminUnitsTable();

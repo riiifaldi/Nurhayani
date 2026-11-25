@@ -68,9 +68,125 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade { animation: fadeIn 0.25s ease-out forwards; }
+        @keyframes splashProgress {
+            0% { width: 0%; }
+            40% { width: 55%; }
+            100% { width: 100%; }
+        }
+        .animate-splash-bar { animation: splashProgress 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes logoReveal {
+            0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-logo-reveal { animation: logoReveal 0.6s ease-out forwards; }
     </style>
 </head>
 <body class="text-slate-900 bg-slate-50 min-h-screen flex flex-col justify-between antialiased">
+
+    <!-- 0. SPLASH / LOADING SCREEN AWAL (LOGO DISNAKER) -->
+    <div id="splash-loading-screen" class="fixed inset-0 z-[70] bg-sulsel-navy text-white flex flex-col items-center justify-center p-6 transition-opacity duration-500 no-print">
+        <div class="animate-logo-reveal flex flex-col items-center text-center max-w-md">
+            <!-- Emblem Logo Disnaker -->
+            <div class="w-24 h-24 bg-white rounded-2xl shadow-2xl border-4 border-sulsel-gold flex items-center justify-center p-3 mb-6">
+                <svg class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 68C27 80 40 88 56 88C72 88 85 78 89 63L80 61C77 71 67 79 56 79C44 79 34 72 30 62L22 68Z" fill="#DC2626"/>
+                    <rect x="23" y="75" width="7" height="9" rx="1.5" transform="rotate(-30 23 75)" fill="#DC2626"/>
+                    <rect x="35" y="84" width="7" height="9" rx="1.5" transform="rotate(-15 35 84)" fill="#DC2626"/>
+                    <rect x="52" y="87" width="7" height="9" rx="1.5" fill="#DC2626"/>
+                    <rect x="68" y="84" width="7" height="9" rx="1.5" transform="rotate(15 68 84)" fill="#DC2626"/>
+                    <rect x="81" y="76" width="7" height="9" rx="1.5" transform="rotate(30 81 76)" fill="#DC2626"/>
+                    <rect x="88" y="64" width="7" height="9" rx="1.5" transform="rotate(45 88 64)" fill="#DC2626"/>
+                    <path d="M72 15H82V25C82 30 77 34 77 34C77 34 72 30 72 25V15Z" fill="#B91C1C"/>
+                    <path d="M74 17H80V24C80 27 77 30 77 30C77 30 74 27 74 24V17Z" fill="#FFFFFF"/>
+                    <circle cx="48" cy="30" r="7.5" fill="#0F172A"/>
+                    <path d="M47 38C38 38 29 44 22 52C20 54 22 58 26 56C32 51 38 47 46 47C54 47 61 52 68 58C71 61 75 58 73 54C67 44 57 38 47 38Z" fill="#0F172A"/>
+                    <path d="M38 52L20 62C18 63 20 66 23 65L41 57L38 52Z" fill="#0F172A"/>
+                    <text x="50" y="99" font-family="'Inter', sans-serif" font-size="6.5" font-weight="900" fill="#0F172A" text-anchor="middle" letter-spacing="0.4">DISNAKER</text>
+                </svg>
+            </div>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400 mb-1.5">Pemerintah Provinsi Sulawesi Selatan</span>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-heading">Pelayanan Magang &amp; Riset Akademik</h1>
+            <p class="text-xs text-slate-300 mt-1">Dinas Tenaga Kerja dan Transmigrasi</p>
+
+            <!-- Progress Bar -->
+            <div class="w-56 h-1.5 bg-white/15 rounded-full overflow-hidden mt-7">
+                <div class="h-full bg-amber-400 rounded-full animate-splash-bar"></div>
+            </div>
+            <span class="text-[11px] text-slate-300 mt-3 font-medium">Memuat sistem layanan...</span>
+        </div>
+    </div>
+
+    <!-- 0B. HALAMAN LOGIN AWAL (LANGSUNG MUNCUL SETELAH LOADING SCREEN) -->
+    <div id="auth-gate-screen" class="fixed inset-0 z-[60] bg-slate-100 hidden flex items-center justify-center p-4 overflow-y-auto no-print">
+        <div class="bg-white rounded-3xl max-w-md w-full p-7 sm:p-9 shadow-xl border border-slate-200 animate-fade my-6">
+            <!-- Header Logo -->
+            <div class="flex items-center space-x-3 pb-5 border-b border-slate-200 mb-5">
+                <div class="w-11 h-11 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center p-1.5 shrink-0">
+                    <svg class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 68C27 80 40 88 56 88C72 88 85 78 89 63L80 61C77 71 67 79 56 79C44 79 34 72 30 62L22 68Z" fill="#DC2626"/>
+                        <circle cx="48" cy="30" r="7.5" fill="#0F172A"/>
+                        <path d="M47 38C38 38 29 44 22 52C20 54 22 58 26 56C32 51 38 47 46 47C54 47 61 52 68 58C71 61 75 58 73 54C67 44 57 38 47 38Z" fill="#0F172A"/>
+                        <text x="50" y="99" font-family="'Inter', sans-serif" font-size="6.5" font-weight="900" fill="#0F172A" text-anchor="middle">DISNAKER</text>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-[#0066FF] leading-tight font-heading">Pelayanan Magang &amp; Riset Akademik</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Silakan masuk untuk mengakses portal layanan</p>
+                </div>
+            </div>
+
+            <!-- Role Switcher Tabs -->
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-5 text-xs font-bold">
+                <button id="gate-tab-peserta" onclick="switchGateRole('peserta')" class="py-2.5 rounded-lg bg-white text-blue-700 shadow-sm transition">
+                    <i class="fa-solid fa-user-graduate mr-1"></i> Peserta
+                </button>
+                <button id="gate-tab-admin" onclick="switchGateRole('admin')" class="py-2.5 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Admin Disnaker
+                </button>
+            </div>
+
+            <!-- Form Login Peserta (Email, NIM, Nama, Password) -->
+            <form id="gate-form-peserta" onsubmit="handleGatePesertaLogin(event)" class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Nama Lengkap *</label>
+                    <input type="text" id="gate-peserta-nama" required placeholder="Contoh: Nurhayani" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-700">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">NIM / Nomor Induk *</label>
+                    <input type="text" id="gate-peserta-nim" required placeholder="Contoh: 123456789" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-700">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Email *</label>
+                    <input type="email" id="gate-peserta-email" required placeholder="nama@mahasiswa.ac.id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-700">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Password *</label>
+                    <input type="password" id="gate-peserta-pass" required minlength="4" placeholder="Minimal 4 karakter" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-700">
+                </div>
+                <button type="submit" class="w-full bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold py-3 rounded-xl shadow transition mt-2">
+                    Masuk ke Portal Layanan
+                </button>
+            </form>
+
+            <!-- Form Login Admin -->
+            <form id="gate-form-admin" onsubmit="handleGateAdminLogin(event)" class="space-y-3.5 text-xs hidden">
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Email Admin *</label>
+                    <input type="text" id="gate-admin-email" required placeholder="admin@disnaker.sulsel.go.id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Password *</label>
+                    <input type="password" id="gate-admin-pass" required placeholder="Masukkan kata sandi admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                    <strong>Akun Admin:</strong> <code>admin@disnaker.sulsel.go.id</code> &bull; Password: <code>admin123</code>
+                </div>
+                <button type="submit" class="w-full bg-sulsel-navy hover:bg-sulsel-dark text-white font-bold py-3 rounded-xl shadow transition mt-2">
+                    Masuk sebagai Admin
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- 1. HEADER & NAVBAR RESMI DISNAKER MAKASSAR (SESUAI DOKUMEN ACUAN) -->
     <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm no-print">
@@ -1238,17 +1354,22 @@
             </div>
 
             <!-- Form Login Peserta -->
-            <form id="form-login-peserta" onsubmit="handlePesertaLogin(event)" class="space-y-4 text-xs">
+            <form id="form-login-peserta" onsubmit="handlePesertaLogin(event)" class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase mb-1">Nomor Registrasi / NIM</label>
-                    <input type="text" id="login-peserta-id" required placeholder="Contoh: MAG-2026-00125 atau 123456789" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Nama Lengkap *</label>
+                    <input type="text" id="login-peserta-nama" required placeholder="Contoh: Nurhayani" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase mb-1">NIM / Kata Sandi</label>
-                    <input type="password" id="login-peserta-pass" required placeholder="Masukkan NIM Anda" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                    <label class="block font-bold text-slate-700 uppercase mb-1">NIM / Nomor Induk *</label>
+                    <input type="text" id="login-peserta-id" required placeholder="Contoh: 123456789" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
                 </div>
-                <div class="p-3 bg-blue-50 rounded-xl border border-blue-200 text-blue-900 text-[11px] leading-relaxed">
-                    <strong>Contoh Akun Peserta:</strong> No. Reg <code>MAG-2026-00125</code> &bull; Sandi/NIM <code>123456789</code> (atau gunakan No. Reg &amp; NIM yang Anda daftarkan).
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Email *</label>
+                    <input type="email" id="login-peserta-email" required placeholder="nama@mahasiswa.ac.id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Password *</label>
+                    <input type="password" id="login-peserta-pass" required minlength="4" placeholder="Minimal 4 karakter" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900">
                 </div>
                 <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow transition">
                     Masuk sebagai Peserta
